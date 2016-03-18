@@ -109,9 +109,14 @@ for r = 1:length(K)
     rho = imblur(data, gSig, gSiz, ndims(data)-1, save_memory, chunkSiz); %covariance of data and basis
     v = sum(rho.^2, 3); %variance explained
 
-    for k = 1:K(r),    
-        [~, ind] = max(v(:));
-        [iHat, jHat] = ind2sub([M, N], ind);
+    for k = 1:K(r),
+        if isempty(params.seedROI),  % if no seedROI, use the default max(v(:)) to seed the next ROI
+            [~, ind] = max(v(:));
+            [iHat, jHat] = ind2sub([M, N], ind);
+        else                         % otherwise use seed supplied by user to seed the next ROI 
+            iHat = params.seedROI(k,1);
+            jHat = params.seedROI(k,2);
+        end
         centers(k, 1) = iHat; centers(k, 2) = jHat;
 
         iSig = [max(iHat - gHalf(1), 1), min(iHat + gHalf(1), M)]; iSigLen = iSig(2) - iSig(1) + 1;
