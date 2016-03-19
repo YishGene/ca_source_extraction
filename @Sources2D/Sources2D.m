@@ -41,8 +41,8 @@ classdef Sources2D < handle
         end
         
         %% fast initialization
-        function [center] = initComponents(obj, Y, K, tau)
-            [obj.A, obj.C, obj.b, obj.f, center] = initialize_components(Y, K, tau, obj.options);
+        function [center, res] = initComponents(obj, Y, K, tau)
+            [obj.A, obj.C, obj.b, obj.f, center, res] = initialize_components(Y, K, tau, obj.options);
         end
         
         %% manual refinement
