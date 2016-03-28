@@ -150,5 +150,11 @@ figure;
 
 plotComponentsGUI(obj, Yr, Cn);     % display all components
 pause;
+
+%% plot the raw dF/F for all components separated. 
+Y_r = (obj.A'*Yr- (obj.A'*obj.A)*obj.C - (obj.A'*full(obj.b))*obj.f) + obj.C;
+plotSpacing(1:14273, bsxfun(@rdivide,Y_r', Df(1:end-1)'), 2, 'k')
+
+
 %% make movie
 makePatchVideo(obj, Yr) 

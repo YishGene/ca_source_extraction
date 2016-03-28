@@ -91,28 +91,16 @@ classdef Sources2D < handle
         end
         
         %% 
-        function  selectandmergeROIs(obj, Y, meanstack)
-            if ~exist('meanstack', 'var'), 
-                meanstack = [];
-            end
+        function  selectandmergeROIs(obj, Y)
+            figure
+            obj.viewContours
             center = com(obj.A,obj.options.d1,obj.options.d2);
             hsc = scatter(center(:,2), center(:,1));
             
             rect = getrect; % get a rectangle that contains the centers of the suspect ROIs
             tf = arrayfun(@(x,y)(x>rect(1) && x< rect(1)+rect(3) && y>rect(2) && y < rect(2)+rect(4)), center(:,2), center(:,1));
-            findtf = find(tf);
-            if isempty(tf), 
-                return;
-            end
-            obj.plotComponents(Y, meanstack, findtf); 
-            uiwait(gcf)
-            
-            answer = questdlg('Merge components?', 'Merge question');
-            switch answer, 
-                case 'Yes'
-                    obj.merge(Y, {findtf});
-            end
-            delete(hsc)
+            obj.plotComponents(Y, [], find(tf)); %#ok<FNDSB>
+            answer = questdlg('Merge components?', 'Merge'
         end
         %% compute the residual
         function [Y_res] = residual(obj, Yr)
@@ -172,11 +160,7 @@ classdef Sources2D < handle
             if ~exist('indROIs', 'var'), 
                 indROIs = [];
             end
-            if ~isempty(obj.Df), % save time by avoiding recalculation of Df
-                view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options, indROIs, obj.Df); 
-            else
-                view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options, indROIs); 
-            end
+            view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options, indROIs); 
         end 
         
         %% plot components GUI
