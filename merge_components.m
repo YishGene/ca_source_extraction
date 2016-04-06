@@ -144,7 +144,7 @@ C = [C(1:nr,:);C_merged;C(nr+1:end,:)];
 A(:,neur_id) = [];
 C(neur_id,:) = [];
 
-if nargin < 7
+if nargin < 7 || isempty(S)
     S = [];
     if nargout == 6
         warning('Merged spikes matrix is returned as empty because the original matrix was not provided.');
@@ -154,7 +154,7 @@ else
     S(neur_id,:) = [];
 end
 
-if strcmpi(options.deconv_method,'constrained_foopsi') || strcmpi(options.deconv_method,'MCEM_foopsi')
+if isfield(P, 'b') &&( strcmpi(options.deconv_method,'constrained_foopsi') || strcmpi(options.deconv_method,'MCEM_foopsi') )
     P.b(neur_id) = [];
     P.b(nr - length(neur_id) + (1:nm)) = P_merged.b;
     P.gn(neur_id) = [];

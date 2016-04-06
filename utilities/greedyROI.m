@@ -126,7 +126,11 @@ for r = 1:length(K)
             
             if dimY == 2; 
                 indloc(1) = max(1,iHat(1)-gHalf(1)); indloc(2) = min(iHat(1)+gHalf(1),dx(1));
+                if indloc(1)==1, indloc(2) = gHalf(1)*2+1; end
+                if indloc(2)==dx(1), indloc(1) = dx(1)-gHalf(1)*2; end
                 indloc(3) = max(1, iHat(2)-gHalf(2)); indloc(4) = min(iHat(2)+gHalf(2), dx(2));
+                 if indloc(3)==1, indloc(4) = gHalf(2)*2+1; end
+                if indloc(4)==dx(2), indloc(3) = dx(2)-gHalf(2)*2; end
                 vloc = v(indloc(1):indloc(2), indloc(3):indloc(4));
                 [~, ind] = max(vloc(:));
                 [iHat(1),iHat(2)] = ind2sub(size(vloc),ind);

@@ -7,7 +7,7 @@ function [C_df,Df,S_df] = extract_DF_F(Y,A,C,S,i)
 %         S matrix of deconvolved activity ((K-1) x T matrix) (optional)
 %         i index of component that represent the background (optional, if not
 %         given it's estimated)
-
+%
 % outputs:  C_df temporal components in the DF/F domain
 %           Df   background for each component to normalize the filtered raw data    
 %           S_df deconvolved activity/spikes in the DF/F domain
