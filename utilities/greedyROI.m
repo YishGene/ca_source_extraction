@@ -114,11 +114,37 @@ for r = 1:length(K)
     v = sum(rho.^2, dimY+1); %variance explained
 
     for k = 1:K(r),    
-        [~, ind] = max(v(:));
-        %[iHat, jHat] = ind2sub([M, N], ind);
-        iHat = zeros(1,dimY);
-        if dimY == 2; [iHat(1),iHat(2)] = ind2sub(dx,ind); else [iHat(1),iHat(2),iHat(3)] = ind2sub(dx,ind); end 
-        %centers(k, 1) = iHat; centers(k, 2) = jHat;
+        if ~params.doSeedROI,  % if no seedROI, use the default max(v(:)) to seed the next ROI
+            [~, ind] = max(v(:));
+            %[iHat, jHat] = ind2sub([M, N], ind);
+            iHat = zeros(1,dimY);
+            if dimY == 2; [iHat(1),iHat(2)] = ind2sub(dx,ind); else [iHat(1),iHat(2),iHat(3)] = ind2sub(dx,ind); end
+            %centers(k, 1) = iHat; centers(k, 2) = jHat;
+        else                         % otherwise use seed supplied by user to seed the next ROI 
+            iHat = params.seedROI(k,:);
+            % find local maximum in the data: 
+            
+            if dimY == 2; 
+                indloc(1) = max(1,iHat(1)-gHalf(1)); indloc(2) = min(iHat(1)+gHalf(1),dx(1));
+                if indloc(1)==1, indloc(2) = gHalf(1)*2+1; end
+                if indloc(2)==dx(1), indloc(1) = dx(1)-gHalf(1)*2; end
+                indloc(3) = max(1, iHat(2)-gHalf(2)); indloc(4) = min(iHat(2)+gHalf(2), dx(2));
+                 if indloc(3)==1, indloc(4) = gHalf(2)*2+1; end
+                if indloc(4)==dx(2), indloc(3) = dx(2)-gHalf(2)*2; end
+                vloc = v(indloc(1):indloc(2), indloc(3):indloc(4));
+                [~, ind] = max(vloc(:));
+                [iHat(1),iHat(2)] = ind2sub(size(vloc),ind);
+                iHat = iHat + indloc([1 3]) - 1;
+                % Right now not sure what this 3-dim business means
+%             else
+%                 vloc = v(iHat(1)-gHalf:iHat(1)+gHalf, iHat(2)-gHalf:iHat(2)+gHalf);
+%                 vlocdx = ones(1,dimY)*(2*gHalf+1); % size of local search patch
+%                 indcorr(1:2) = iHat(1:2) - gHalf-1; % index correction term
+%                 [iHat(1),iHat(2),iHat(3)] = ind2sub(vlocdx,ind);
+            end
+        end
+        
+        
         centers(k,:) = iHat;
 
         %iSig = [max(iHat - gHalf(1), 1), min(iHat + gHalf(1), M)]; iSigLen = iSig(2) - iSig(1) + 1;

@@ -1,0 +1,40 @@
+diff a/@Sources2D/Sources2D.m b/@Sources2D/Sources2D.m	(rejected hunks)
+@@ -74,9 +74,36 @@
+         end
+         
+         %% update temporal components
+-        function updateTemporal(obj, Y)
++        function updateTemporal(obj, Y, varargin)
++            % updateTemporal(obj, Y, ..., parameter, value);
++            %
++            % parameter values can be of the following: 
++            % 'A', 'b', 'C', 'f', 'P', 'options'
++            % 
++            % default values are taken from obj
++            %
++            % example: obj.updateTemporal(Y, 'A', Aprevious, 'C', Cprevious)
++            
++            
++            parser = inputParser;
++            parser.addParameter('A', obj.A);
++            parser.addParameter('b', obj.b);
++            parser.addParameter('C', obj.C);
++            parser.addParameter('f', obj.f);
++            parser.addParameter('P', obj.P);
++            parser.addParameter('options', obj.options);
++            
++            parser.parse(varargin{:});
++            
++            A_ = parser.Results.A;
++            b_ = parser.Results.b;
++            C_ = parser.Results.C;
++            f_ = parser.Results.f;
++            P_ = parser.Results.P;
++            options_ = parser.Results.options;
++            
+             [obj.C, obj.f, obj.P, obj.S] = update_temporal_components(...
+-                Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
++                Y, A_, b_, C_, f_, P_, options_);
+         end
+                        
+         %% merge found components

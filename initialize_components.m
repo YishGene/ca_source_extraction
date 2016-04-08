@@ -1,4 +1,4 @@
-function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options)
+function [Ain, Cin, bin, fin, center, res] = initialize_components(Y, K, tau, options)
 
 % Initalize components using a greedy approach followed by hierarchical
 % alternative least squares (HALS) NMF. Optional use of spatio-temporal
@@ -88,11 +88,12 @@ options_ds.d2 = ds(2);
 if strcmpi(options.init_method,'greedy')
     % run greedy method
     fprintf('Initializing components with greedy method \n');
-    [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options);
+    [Ain, Cin, bin, fin, ~, res] = greedyROI(Y_ds, K, options);
 elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
     [Ain,Cin,bin,fin] = sparse_NMF_initialization(Y_ds,K,options_ds);
+    res = []; % no residual for sparse NMF
 else
     error('Unknown initialization method')
 end

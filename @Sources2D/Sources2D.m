@@ -41,13 +41,30 @@ classdef Sources2D < handle
         end
         
         %% fast initialization
-        function [center] = initComponents(obj, Y, K, tau)
-            [obj.A, obj.C, obj.b, obj.f, center] = initialize_components(Y, K, tau, obj.options);
+        function [center, res] = initComponents(obj, Y, K, tau)
+            [obj.A, obj.C, obj.b, obj.f, center, res] = initialize_components(Y, K, tau, obj.options);
         end
+        
+        %% add new components post-initialization
+        % prev_res is a residual left from previous calculations (i.e.
+        % minus the components already accounted for. Saves the need to
+        % recalculate the residual
+        function [center, res] = addComponents(obj, prev_res, K, tau)
+            [newA, newC, ~, ~, center, res] = initialize_components(prev_res, K, tau, obj.options);
+            obj.A = [obj.A, newA];
+            obj.C = [obj.C; newC];
+        end
+        
+        
         
         %% manual refinement
         function center = refineComponents(Y,obj,center,img,sx)
+            oldDoSeedROI = obj.options.doSeedROI;
+            obj.options.doSeedROI = false;
+                
             [obj.A,obj.C,center] = manually_refine_components(Y,obj.A,obj.C,center,img,sx,obj.options);
+            
+            obj.options.doSeedROI = oldDoSeedROI;
         end
         
         %% update spatial components
@@ -63,11 +80,40 @@ classdef Sources2D < handle
         end
                        
         %% merge found components
-        function [nr, merged_ROIs] = merge(obj, Y)
+        function [nr, merged_ROIs] = merge(obj, Y, varargin)
+            % inputs:
+            %   obj:    
+            %   Y  : the imaging matrix
+            %   force_merge_groups (optional): a cell array of groups to
+            %   use when force-merging ROIs
             [obj.A, obj.C, nr, merged_ROIs, obj.P, obj.S] = merge_components(...
-                Y,obj.A, obj.b, obj.C, obj.f, obj.P,obj.S, obj.options);
+                Y,obj.A, obj.b, obj.C, obj.f, obj.P,obj.S, obj.options, varargin{:});
         end
         
+        %% 
+        function  selectandmergeROIs(obj, Y, meanstack)
+            if ~exist('meanstack', 'var'), 
+                meanstack = [];
+            end
+            center = com(obj.A,obj.options.d1,obj.options.d2);
+            hsc = scatter(center(:,2), center(:,1));
+            
+            rect = getrect; % get a rectangle that contains the centers of the suspect ROIs
+            tf = arrayfun(@(x,y)(x>rect(1) && x< rect(1)+rect(3) && y>rect(2) && y < rect(2)+rect(4)), center(:,2), center(:,1));
+            findtf = find(tf);
+            if isempty(tf), 
+                return;
+            end
+            obj.plotComponents(Y, meanstack, findtf); 
+            uiwait(gcf)
+            
+            answer = questdlg('Merge components?', 'Merge question');
+            switch answer, 
+                case 'Yes'
+                    obj.merge(Y, {findtf});
+            end
+            delete(hsc)
+        end
         %% compute the residual
         function [Y_res] = residual(obj, Yr)
             Y_res = Yr - obj.A*obj.C - obj.b*obj.f;
@@ -105,19 +151,32 @@ classdef Sources2D < handle
         
         %% view contours 
         function [json_file] = viewContours(obj, Cn, contour_threshold, display)
-            if or(isempty(Cn), ~exist('Cn', 'var') )
+            if ~exist('Cn', 'var') || isempty(Cn)
                 Cn = reshape(obj.P.sn, obj.options.d1, obj.options.d2); 
+            end
+            if ~exist('contour_threshold', 'var') || isempty(contour_threshold) 
+                contour_threshold = obj.options.cont_threshold; 
+            end
+            if ~exist('display', 'var')  || isempty(display)
+                display = 0; 
             end
             [obj.Coor, json_file] = plot_contours(obj.A, Cn, ...
                 contour_threshold, display); 
         end 
         
         %% plot components 
-        function plotComponents(obj, Y, Cn)
+        function plotComponents(obj, Y, Cn, indROIs)
             if ~exist('Cn', 'var')
                 Cn = []; 
             end
-            view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options); 
+            if ~exist('indROIs', 'var'), 
+                indROIs = [];
+            end
+            if ~isempty(obj.Df), % save time by avoiding recalculation of Df
+                view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options, indROIs, obj.Df); 
+            else
+                view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options, indROIs); 
+            end
         end 
         
         %% plot components GUI

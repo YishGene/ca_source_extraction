@@ -39,7 +39,7 @@ newcenters=[centers];
 fig = figure;
 %imagesc(img,[min(img(:)),max(img(:))]);
 imshow(img, []);
-    axis square; axis tight; hold all;
+    axis equal; axis tight; hold all;
     scatter(newcenters(:,2),newcenters(:,1),'mo'); hold on;
     title('Center of ROIs found from initialization algorithm');
     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');
@@ -81,8 +81,8 @@ while ~isempty(x)
             % Changes to accommodate for asymmetric tau (and to take into
             % account that the X and Y coordinate system here is not the
             % same as matlab's. Y.E. 6/4/2016)
-            INT_y = repmat(int_y,numel(int_x),1 );
-            INT_x = repmat(int_x',1, numel(int_y));
+            INT_y = repmat(int_y',1, numel(int_y));
+            INT_x = repmat(int_x, numel(int_y), 1);
             coor = sub2ind([options.d1,options.d2],INT_x(:),INT_y(:));
             Y_res = Ypatch - A(coor,:)*C;
             [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx(1)+1,2*sx(2)+1,T), 1, options);
@@ -118,7 +118,7 @@ while ~isempty(x)
                 % replot after removing
                 clf;
                 imagesc(img,[min(img(:)),max(img(:))]);
-                    axis square; axis tight; hold all;
+                    axis equal; axis tight; hold all;
                     scatter(newcenters(:,2),newcenters(:,1),'mo'); hold on;
                     title('Center of ROIs found from initialization algorithm');
                     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');
