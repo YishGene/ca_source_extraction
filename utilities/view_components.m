@@ -1,4 +1,4 @@
-function view_components(Y,A,C,b,f,Cn,options, indROIs, Df)
+function view_components(Y,A,C,b,f,Cn,options)
 
 % plot spatial components and temporal traces against filtered background
 % Y:        raw data    
@@ -8,9 +8,6 @@ function view_components(Y,A,C,b,f,Cn,options, indROIs, Df)
 % f:        temporal background
 % Cn:       background image (default: mean image)
 % options:  options structure
-% indROIs:  (optional - Y.E.) - specify which ROIs to plot. (default: all). 
-% Df     :  (optional - Y.E.) - normalizing coefficients to avoid a lengthy
-%               calculation
 
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
@@ -36,16 +33,6 @@ if isfield(options,'name') && ~isempty(options.name);
 else
     name = [defoptions.name,'_components'];
 end  
-if ~isfield(options, 'plot_temporal_components') || isempty(options.plot_temporal_components), 
-    plot_temporal_components = true;
-else
-    plot_temporal_components = options.plot_temporal_components;
-end
-if ~isfield(options, 'hold_plot_components') || isempty(options.hold_plot_components),
-    hold_plot_components = 'off'; 
-else
-    hold_plot_components = options.hold_plot_components; 
-end
     
 T = size(C,2);
 if ndims(Y) == 3
@@ -62,19 +49,12 @@ C = spdiags(nA,0,K,K)*C;
 
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
-
-if ~exist('indROIs', 'var') || isempty(indROIs), 
-    indROIs = 1:nr+nb;
-end
-
 %nA = full(sum(A.^2))';  % energy of each row
 %Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
 Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
 
 if plot_df
-    if ~exist('Df', 'var') || isempty(Df)
-        [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
-    end
+    [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
 else
     Df = ones(size(A,2)+1,1);
 end
@@ -86,15 +66,14 @@ if save_avi
 end
 thr = 0.9;
 fig = figure;
-    set(gcf,'Position',[-1.5350   -0.0566    1.5360    0.8880]*1e3);
-    set(gcf,'PaperPosition',[-1.5350   -0.0566    1.5360    0.8880]*1e3);
+    set(gcf,'Position',2*[300,300,960,480]);
+    set(gcf,'PaperPosition',2*[300,300,960,480]);
     int_x = zeros(nr,2*sx);
     int_y = zeros(nr,2*sx);
     cm = com(A,d1,d2);
-for i = indROIs(:)'
+for i = 1:nr+nb
     if i <= nr
     subplot(3,2,5);
-    hold(hold_plot_components);
         Atemp = reshape(A(:,i),d1,d2);
         int_x(i,:) = round(cm(i,1)) + (-(sx-1):sx);
         if int_x(i,1)<1
@@ -114,7 +93,6 @@ for i = indROIs(:)'
         imagesc(int_x(i,:),int_y(i,:),Atemp); axis square;
     end
     subplot(3,2,[1,3]);
-    hold(hold_plot_components);
     if i <= nr
         imagesc(2*Cn); axis equal; axis tight; axis off; hold on; 
         A_temp = full(reshape(A(:,i),d1,d2));
@@ -133,21 +111,14 @@ for i = indROIs(:)'
         title('Background component','fontsize',16,'fontweight','bold'); drawnow; 
     end
     subplot(3,2,[2,4,6]);
-    hold(hold_plot_components);
     if i <= nr
-        plot(1:T,Y_r(i,:)/Df(i),'linewidth',2); hold all; 
-        if plot_temporal_components, 
-            plot(1:T,C(i,:)/Df(i),'linewidth',2);
-            leg = legend('Raw trace (filtered)','Inferred');
-        else
-            leg = legend('Raw trace (filtered)');
-        end
+        plot(1:T,Y_r(i,:)/Df(i),'linewidth',2); hold all; plot(1:T,C(i,:)/Df(i),'linewidth',2);
         if plot_df
             title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
         else
             title(sprintf('Component %i (calcium raw value)',i),'fontsize',16,'fontweight','bold');
         end
-        
+        leg = legend('Raw trace (filtered)','Inferred');
         set(leg,'FontSize',14,'FontWeight','bold');
         drawnow; 
         hold off;

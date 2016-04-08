@@ -1,4 +1,4 @@
-function [A,C,nr,merged_ROIs,P,S] = merge_components(Y,A,b,C,f,P,S,options, force_merge_groups)
+function [A,C,nr,merged_ROIs,P,S] = merge_components(Y,A,b,C,f,P,S,options)
 
 % merging of spatially overlapping components that have highly correlated tmeporal activity
 % The correlation threshold for merging overlapping components is user specified in P.merge_thr (default value 0.85)
@@ -11,8 +11,6 @@ function [A,C,nr,merged_ROIs,P,S] = merge_components(Y,A,b,C,f,P,S,options, forc
 % P:            struct for neuron parameters
 % S:            deconvolved activity/spikes (optional)
 % options:      struct for algorithm parameters
-% force_merge_groups : (Y.E. optional): force merge a bunch of preselected
-%                       ROIs, given as a cell array of matrices. 
 
 % Outputs:
 % A:            matrix of new spatial components
@@ -38,7 +36,6 @@ nr = size(A,2);
 %[d,T] = size(Y);
 d = size(A,1);
 T = size(C,2);
-if ~exist('force_merge_groups', 'var') || isempty(force_merge_groups), 
 C_corr = corr(full(C(1:nr,:)'));
 FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
 
@@ -66,13 +63,6 @@ for i = 1:length(cor)
 end
 
 [~,ind] = sort(cor,'descend');
-else % force_merge_groups exists, construct MC matrix. 
-    MC = zeros(d,1);
-    for igroup = 1:numel(force_merge_groups), 
-        MC(force_merge_groups{igroup},igroup) = 1;
-    end
-    ind = 1:size(MC,2);
-end
 nm = min(length(ind),mx);   % number of merging operations
 merged_ROIs = cell(nm,1);
 A_merged = zeros(d,nm);

@@ -46,7 +46,6 @@ fontname = 'helvetica';
     cmap = hot(3*size(Aor,2));
     CC = cell(size(Aor,2),1);
     CR = cell(size(Aor,2),2);
-    tic
     for i = 1:size(Aor,2)
         A_temp = full(reshape(Aor(:,i),d1,d2));
         A_temp = medfilt2(A_temp,[3,3]);
@@ -82,5 +81,4 @@ fontname = 'helvetica';
             jsf = repmat(jsf,size(Aor,2),1);
         end
     end
-    toc
     axis off;
