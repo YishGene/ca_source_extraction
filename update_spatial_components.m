@@ -23,13 +23,6 @@ function [A,b,C] = update_spatial_components(Y,C,f,A_,P,options)
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-% Make a pause button to allow pausing the run to check stuff and
-% to give the computer a breather. 
-hPauseButton = makePauseButton;
-cleanUpObj = onCleanup(@()delete(hPauseButton));
-drawnow
-
-
 warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
 memmaped = isobject(Y);
 if memmaped

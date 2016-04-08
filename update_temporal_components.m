@@ -42,13 +42,6 @@ function [C,f,P,S,YrA] = update_temporal_components(Y,A,b,Cin,fin,P,options)
 % Written by: 
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-
-% Make a pause button to allow pausing the run to check stuff and
-% to give the computer a breather. 
-hPauseButton = makePauseButton;
-cleanUpObj = onCleanup(@()delete(hPauseButton));
-drawnow
-
 memmaped = isobject(Y);
 if memmaped
     sizY = size(Y,'Y');
@@ -90,14 +83,6 @@ if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfiel
     end
 else
     G = speye(T);
-end
-
-if strcmpi(method,'MCMC')
-    if ~isfield(P,'p') || isempty(P.p); P.p = 2; end;
-end
-
-if strcmpi(method,'constrained_foopsi')
-    if ~isfield(P,'p') || isempty(P.p); P.p = 2; end;
 end
 
 ff = find(sum(A)==0);
@@ -178,8 +163,8 @@ else
         P.neuron_sn = cell(K,1);
     end
     if strcmpi(method,'MCMC')        
-        params.B = 100;
-        params.Nsamples = 200;
+        params.B = 300;
+        params.Nsamples = 400;
         params.p = P.p;
     else
         params = [];
