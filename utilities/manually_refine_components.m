@@ -18,8 +18,11 @@ if ~isfield(options,'d1') || isempty(options.d1); options.d1 = input('What is th
 if ~isfield(options,'d2') || isempty(options.d2); options.d2 = input('What is the total number of columns? \n'); end       % # of columns
 if ~isfield(options,'cont_threshold') || isempty(options.cont_threshold); cont_threshold = defoptions.cont_threshold; else cont_threshold = options.cont_threshold; end          % # of rows
 if nargin < 6 || isempty(sx)
-    sx = 5;
+    sx = [5 5];
+elseif numel(sx)==1, % if only 1 dim given, make it symmetric in x and y
+    sx = [sx sx];
 end
+
 if nargin < 5 || isempty(img)
     img = std(Y,[],3);
 end
@@ -34,8 +37,9 @@ T = size(C,2);
 newcenters=[centers];
 % ident_point=[0,0];
 fig = figure;
-imagesc(img,[min(img(:)),max(img(:))]);
-    axis equal; axis tight; hold all;
+%imagesc(img,[min(img(:)),max(img(:))]);
+imshow(img, []);
+    axis square; axis tight; hold all;
     scatter(newcenters(:,2),newcenters(:,1),'mo'); hold on;
     title('Center of ROIs found from initialization algorithm');
     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');
@@ -57,26 +61,31 @@ while ~isempty(x)
         if button==1
             disp(['Adding pixel at:' num2str(fliplr(pixel))])
             newcenters=[newcenters; fliplr(pixel)];
-            int_x = round(newcenters(end,1)) + (-sx:sx);
+            int_x = round(newcenters(end,1)) + (-sx(1):sx(1));
             if int_x(1)<1
                 int_x = int_x + 1 - int_x(1);
             end
             if int_x(end)>options.d1
                 int_x = int_x - (int_x(end)-options.d1);
             end
-            int_y = round(newcenters(end,2)) + (-sx:sx);
+            int_y = round(newcenters(end,2)) + (-sx(2):sx(2));
             if int_y(1)<1
                 int_y = int_y + 1 - int_y(1);
             end
             if int_y(end)>options.d2
                 int_y = int_y - (int_y(end)-options.d2);
             end
-            Ypatch = reshape(Y(int_x,int_y,:),(2*sx+1)^2,size(C,2));
+            Ypatch = reshape(Y(int_x,int_y,:),[],size(C,2));
             Ypatch = bsxfun(@minus, Ypatch, median(Ypatch,2));
-            [INT_x,INT_y] = meshgrid(int_x,int_y);
+            %[INT_x,INT_y] = meshgrid(int_x,int_y);
+            % Changes to accommodate for asymmetric tau (and to take into
+            % account that the X and Y coordinate system here is not the
+            % same as matlab's. Y.E. 6/4/2016)
+            INT_y = repmat(int_y,numel(int_x),1 );
+            INT_x = repmat(int_x',1, numel(int_y));
             coor = sub2ind([options.d1,options.d2],INT_x(:),INT_y(:));
             Y_res = Ypatch - A(coor,:)*C;
-            [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx+1,2*sx+1,T), 1, options);
+            [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx(1)+1,2*sx(2)+1,T), 1, options);
             %[atemp, ctemp] = initialize_components(reshape(Y_res,2*sx+1,2*sx+1,T), 1,sx,options);  % initialize
             % find contour
             a_srt = sort(atemp,'descend');
@@ -109,7 +118,7 @@ while ~isempty(x)
                 % replot after removing
                 clf;
                 imagesc(img,[min(img(:)),max(img(:))]);
-                    axis equal; axis tight; hold all;
+                    axis square; axis tight; hold all;
                     scatter(newcenters(:,2),newcenters(:,1),'mo'); hold on;
                     title('Center of ROIs found from initialization algorithm');
                     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');

@@ -23,9 +23,9 @@ fontname = 'helvetica';
 %     set(gcf, 'PaperUnits', units,'Units', units)           
 %     set(gcf, 'PaperPosition',[5, 5, 12, 12])
 %     set(gcf, 'Position',3*[5, 5, 12, 12])
-    [d1,d2] = size(Cn);
+    [d1,d2, ~] = size(Cn);
     imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
-    axis tight; axis equal; 
+    axis tight; axis square; 
     %set(gca,'XTick',[],'YTick',[]);
     posA = get(gca,'position');
     set(gca,'position',posA);
@@ -62,11 +62,13 @@ fontname = 'helvetica';
         end
         hold on;
     end
+    toc
     cm = com(Aor(:,1:end),d1,d2);
     if display_numbers
         lbl = strtrim(cellstr(num2str((1:size(Aor,2))')));
         text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
     end
+    tic
     for i = 1:size(Aor,2);
         if ~isempty(CR{i,1})
             jsf(i) = struct('id',i,...
